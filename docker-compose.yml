@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: aachman
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "3005:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/aachman?schema=public
+      - NEXTAUTH_URL=http://localhost:3005
+    env_file:
+      - .env.example
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
