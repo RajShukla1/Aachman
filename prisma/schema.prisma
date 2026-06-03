@@ -1,0 +1,170 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// MULTI-TENANT ARCHITECTURE
+
+model Business {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  domain      String?  @unique
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users      User[]
+  leads      Lead[]
+  events     Event[]
+  galleries  Gallery[]
+  menus      Menu[]
+  packages   Package[]
+  blogs      Blog[]
+  reviews    Review[]
+}
+
+enum Role {
+  SUPERADMIN
+  OWNER
+  MANAGER
+  STAFF
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(STAFF)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  businessId String?
+  business   Business? @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  FOLLOW_UP
+  QUOTATION_SENT
+  NEGOTIATION
+  CONFIRMED
+  LOST
+}
+
+model Lead {
+  id         String     @id @default(cuid())
+  name       String
+  mobile     String
+  email      String?
+  eventType  String?
+  guestCount Int?
+  eventDate  DateTime?
+  budget     Float?
+  notes      String?
+  source     String?    // e.g., "WhatsApp", "Website Form"
+  status     LeadStatus @default(NEW)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id         String   @id @default(cuid())
+  title      String
+  date       DateTime
+  type       String
+  guestCount Int
+  status     String   @default("CONFIRMED") // PENDING, CONFIRMED, COMPLETED
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Gallery {
+  id          String   @id @default(cuid())
+  title       String
+  url         String
+  type        String   @default("IMAGE") // IMAGE, VIDEO
+  category    String?
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Menu {
+  id          String   @id @default(cuid())
+  category    String
+  name        String
+  description String?
+  price       Float
+  image       String?
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   // Wedding, Birthday, etc.
+  description String?
+  price       Float
+  features    String[] // List of features
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Blog {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text
+  category  String
+  tags      String[]
+  image     String?
+  seoTitle  String?
+  seoDesc   String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id           String   @id @default(cuid())
+  customerName String
+  rating       Int      @default(5)
+  content      String   @db.Text
+  image        String?
+  isApproved   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+}
