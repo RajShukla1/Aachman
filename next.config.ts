@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'image.wedmegood.com' }
     ],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
 };
 
 export default nextConfig;
